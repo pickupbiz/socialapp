@@ -2,16 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 
 export const WebSocketClient = () => {
     const [messages, setMessages] = useState([]);
-    const [mgs, setMsg] = useState("Hi");
-    const [userName, setUserName] = useState("Amjad");
-    const [inputValue, setInputValue] = useState('');
+    const [msg, setMsg] = useState("Hi");
+    const [userName, setUserName] = useState("John");
     const ws = useRef(null);
 
     useEffect(() => {
-        console.log("Creating WebSocket.....")
         // Create WebSocket connection.
         ws.current = new WebSocket('ws://localhost:5755');
-        console.log("Created WebSocket.....")
 
         // Connection opened
         ws.current.onopen = () => {
@@ -20,10 +17,8 @@ export const WebSocketClient = () => {
 
         // Listen for messages
         ws.current.onmessage = (event) => {
-            const message = {
-                userName,
-                msg: event.data
-            };
+            const msgData = event.data.replace(/'/g, '"');
+            const message = JSON.parse(msgData);
             setMessages((prevMessages) => [...prevMessages, message]);
         };
 
@@ -47,11 +42,11 @@ export const WebSocketClient = () => {
         if (ws.current && ws.current.readyState === WebSocket.OPEN) {
             const message = {
                 userName,
-                msg: inputValue
+                msg
             };
             const msgData = JSON.stringify(message)
             ws.current.send(msgData);
-            setInputValue('');
+            setMsg('');
         } else {
             console.error('WebSocket is not open');
         }
@@ -62,7 +57,7 @@ export const WebSocketClient = () => {
             <h1>Chat</h1>
             <div>
                 {messages.map((message, index) => (
-                    <div key={index}>{message.userName} : {message.msg}</div>
+                    <div key={index}><b style={{ color: "brown" }}>{message.userName}</b> : {message.msg}</div>
                 ))}
             </div>
             <input
@@ -72,8 +67,8 @@ export const WebSocketClient = () => {
             />
             <input
                 type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                value={msg}
+                onChange={(e) => setMsg(e.target.value)}
             />
             <button onClick={sendMessage}>Send</button>
         </div>
