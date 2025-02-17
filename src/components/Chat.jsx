@@ -1,42 +1,26 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useWebSocket } from './WebSocketContext';
+import {WebS}
 
-export const WebSocketClient = () => {
+const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [msg, setMsg] = useState("Hi");
     const [userName, setUserName] = useState("John");
-    const ws = useRef(null);
+    const ws = useWebSocket();
 
     useEffect(() => {
-        // Create WebSocket connection.
-        ws.current = new WebSocket('wss://chatsocket.pickupbiz.in');
+        if (ws) {
+            // Listen for messages
+            ws.onmessage = (event) => {
+                const msgData = event.data.replace(/'/g, '"');
+                const message = JSON.parse(msgData);
+                setMessages((prevMessages) => [...prevMessages, message]);
+            };
 
-        // Connection opened
-        ws.current.onopen = () => {
-            console.log('WebSocket connected');
-        };
-
-        // Listen for messages
-        ws.current.onmessage = (event) => {
-            const msgData = event.data.replace(/'/g, '"');
-            const message = JSON.parse(msgData);
-            setMessages((prevMessages) => [...prevMessages, message]);
-        };
-
-        // Handle errors
-        ws.current.onerror = (error) => {
-            console.error('WebSocket error:', error);
-        };
-
-        // Connection closed
-        ws.current.onclose = () => {
-            console.log('WebSocket disconnected');
-        };
-
-        // Cleanup on component unmount
-        return () => {
-            ws.current.close();
-        };
-    }, []);
+            // Send a message
+            ws.send(JSON.stringify({ type: 'greet', message: 'Hello from UserComponent' }));
+        }
+    }, [ws]);
 
     const sendMessage = () => {
         if (ws.current && ws.current.readyState === WebSocket.OPEN) {
@@ -74,3 +58,5 @@ export const WebSocketClient = () => {
         </div>
     );
 };
+
+export default Chat;
